@@ -5,6 +5,9 @@ local scene = composer.newScene()
 local physics = require ("physics")
 physics.start()
 
+
+
+
 display.setStatusBar( display.HiddenStatusBar )
 
 
@@ -39,6 +42,7 @@ end
 --create player
 local function spawnPlayers()
 
+	print("player created")
 	local player = display.newImage("images/captur.PNG")
 	player.x=math.random(40,166)
 	player.y=math.random(66,404)
@@ -225,7 +229,7 @@ function pushStarToOriginalPosition()
 	
 	if star then
  		transition.to(star, {x = 160, y= 500, time=0,
-		onComplete=timer.performWithDelay(1000,hideMyText)})
+		onComplete=timer.performWithDelay(1000,hideMyText),tag="star"})
  	end
 end
 
@@ -233,11 +237,15 @@ end
 function movePlayer(player)
 	--print("Move soldier.")
 
-	
+	--save current,i.e. prev position
+
 	--move others
 	for i=1,no_of_player-1,1 do
 	--	print("for sure.")
-		transition.to(player[i],{time=1000,x=math.random(40,166),y=math.random(66,404)})
+		prevX=player[i].x
+		prevY=player[i].y
+		print(prevX.."yo")
+		transition.to(player[i],{time=1000,x=math.random(40,166),y=math.random(66,404),tag="player1"})
 	end
 
 		--move one player
@@ -248,7 +256,8 @@ function movePlayer(player)
 		y=math.random(66,404),
 		onComplete = function()
                 movePlayer(player)
-            	end
+            	end,
+            	tag="player"
 
 	})
 
@@ -322,6 +331,15 @@ function scene:hide( event )
 		-- e.g. stop timers, stop animation, unload sounds, etc.)
 	elseif phase == "did" then
 		-- Called when the scene is now off screen
+		transition.cancel("player")
+		transition.cancel("player1")
+		transition.cancel("star")
+		if player ~=nil then
+		for i=1,#player do
+			player[i]:removeSelf()
+			player[i]=nil
+		end		
+	end
 	end	
 end
 
@@ -333,7 +351,7 @@ function scene:destroy( event )
 	-- INSERT code here to cleanup the scene
 	-- e.g. remove display objects, remove touch listeners, save state, etc.
 	--composer.removeScene("level1",true)
-
+	
 	-- sceneGroup:removeSelf()
 	-- sceneGroup=nil
 end

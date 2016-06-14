@@ -68,23 +68,23 @@ local function readFromFile( )
 	local contents
 	local path = system.pathForFile( "myfile"..paramsToBringBack..".txt", system.DocumentsDirectory )
 
--- Open the file handle
-local file, errorString = io.open( path, "r" )
+	-- Open the file handle
+	local file, errorString = io.open( path, "r" )
 
-if not file then
-    -- Error occurred; output the cause
-    print( "File error: " .. errorString )
-else
-    -- Read data from file
-    contents = file:read( "*a" )
-    -- Output the file contents
-    print( "Contents of " .. path .. "\n" .. contents )
-    -- Close the file handle
-    io.close( file )
-end
+	if not file then
+	    -- Error occurred; output the cause
+	    print( "File error: " .. errorString )
+	else
+	    -- Read data from file
+	    contents = file:read( "*a" )
+	    -- Output the file contents
+	    print( "Contents of " .. path .. "\n" .. contents )
+	    -- Close the file handle
+	    io.close( file )
+	end
 
-file = nil
-return contents
+	file = nil
+	return contents
 
 end
 
@@ -121,6 +121,24 @@ end
 local function onShareBtnReleased (event)
 	myClass.onShareButtonReleased(event)
 end
+
+
+--highscore button
+local function onHighScoreBtnReleased (event)
+	-- Options table for the overlay scene "pause.lua"
+	local options = {
+	    isModal = true,
+	    effect = "fade",
+	    time = 400,
+	    params = {
+	        sampleVar = "my sample variable"
+	    }
+	}
+
+	-- By some method (a pause button, for example), show the overlay
+	composer.showOverlay( "highscores", options )
+end
+
 
 --home button
 local function showHome(event)
@@ -243,7 +261,21 @@ function scene:create( event )
 
 
 
+--highscores button
+	local HighScoreButton = widget.newButton{
 
+		fontSize="20",
+		font="Bold",
+		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 }  },
+		defaultFile="images/buttonoverlay.png",
+		overFile="images/buttonoverlay.png",
+		width=154, height=50,	
+	    id = "highscores",    
+	    label = "Highscores",
+	    onRelease = onHighScoreBtnReleased -- event listener function
+	}
+	HighScoreButton.x = display.contentWidth*0.5
+	HighScoreButton.y = display.contentHeight -20
 
 	
 
@@ -254,6 +286,7 @@ function scene:create( event )
 	sceneGroup:insert(HomeBtn)
 	sceneGroup:insert( ReplayBtn)
 	sceneGroup:insert(shareButton)
+	sceneGroup:insert(HighScoreButton)
 	sceneGroup:insert(txt_highscore)
 
 
