@@ -1,40 +1,80 @@
-display.setStatusBar(display.HiddenStatusBar)
- 
-centerX = display.contentWidth * .5
-centerY = display.contentHeight * .5
+local animClass={}
 
-local bg = display.newImageRect("images/backg.jpg", 480, 320)
-bg.x = centerX
-bg.y = centerY
+local sheetData
+local spriteSheet
+local sequenceData
+local player
 
-local function makeRyu()
+animClass.makePlayer= function ()
  
-	local sheetData =  { width = 24 , height= 32, count = 1 , numFrames = 12 }
-	local spriteSheet = graphics.newImageSheet("images/res_viewer.png" , sheetData)
+	sheetData =  { width = 36 , height= 48, count = 1 , numFrames = 12 }
+	spriteSheet = graphics.newImageSheet("images/playerview.png" , sheetData)
  
-	local sequenceData = { 
-	{name = "fight", frames={1,2,3,4,5,6,7,8,9,10,11,12,1},  count=22 time=10000, loopCount = 1 }
-	}		
+	sequenceData = 
+	{ 
+
+		{
+			name = "up",
+		    frames={1,2,3,1},  
+		    count=4,
+		    time=4000, 
+		    loopCount = 0 
+
+		},
+
+		{
+			name = "down",
+		    frames={7,8,9,7},  
+		    count=4,
+		    time=4000, 
+		    loopCount = 0 
+
+		},
+		{
+			name = "left",
+		    frames={10,11,12,10},  
+		    count=4,
+		    time=4000, 
+		    loopCount = 0 
+
+		},
+		{
+			name = "right",
+		    frames={4,5,6,4},  
+		    count=4,
+		    time=4000, 
+		    loopCount = 0 
+
+		}
+
+	}	
 	
-	ryu = display.newSprite (spriteSheet, sequenceData)
+	player = display.newSprite (spriteSheet, sequenceData)
  
  
-	ryu.x = centerX-100
-	ryu.y = centerY+15
-	ryu:setSequence("fight")
-	
+	-- player.x = centerX-100
+	-- player.y = centerY+15
+	player:setSequence("down")
+	return player
 end
 
-makeRyu()
+--makePlayer()
 
 
 -- local function startCratefall()
 -- 	crates:play()
 -- end
- 
-local function startSprite(event)
-ryu:play()
---timer.performWithDelay(200, startCratefall )
+
+animClass.setSequence=function(sequence)
+	player:setSequence(sequence)
 end
  
-ryu:addEventListener("tap", startSprite )
+animClass.startSprite =function ()
+	player:play()
+--timer.performWithDelay(200, startCratefall )
+end
+
+
+
+return animClass
+--ryu:addEventListener("tap", startSprite )

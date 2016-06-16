@@ -7,7 +7,7 @@ local publicClass={}
 
 
 
- publicClass.onShareButtonReleased= function ( event )
+publicClass.onShareButtonReleased= function ( event )
 
     print("Score recved : "..scoreToSend)
     

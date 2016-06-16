@@ -6,6 +6,34 @@ local physics = require ("physics")
 physics.start()
 
 
+-- For animation 
+local animation= require("checkanim")
+
+--load sound effect 
+--options
+
+
+local sfxr=require("sfx")
+sfxr.init()
+audio.setVolume(0.3,2)
+local bgmusicChannel
+
+
+--background music
+local function playBackgroundMusic(  )
+	-- body
+	local options=
+	{
+		channel=2,
+		loop=-1
+
+	}
+
+	audio.setVolume(0.1,{channel=2})
+	bgmusicChannel=audio.play(sfxr.bgmusic,options)
+
+end
+
 
 
 display.setStatusBar( display.HiddenStatusBar )
@@ -19,8 +47,10 @@ display.setStatusBar( display.HiddenStatusBar )
 local no_of_player
 local duration
 local timerText
+local  mytimer =1
 local paramsToBringBack
 local paramsToBringBackText 
+local sceneG
 
 local function getPlayerCount(level)
 	playercount=2
@@ -42,13 +72,10 @@ end
 --create player
 local function spawnPlayers()
 
-	print("player created")
-	local player = display.newImage("images/captur.PNG")
-	player.x=math.random(40,166)
-	player.y=math.random(66,404)
+	local player=animation.makePlayer()
 	player.name="player"
 	physics.addBody(player,"static")
-
+	animation.startSprite()
 	return player
 
 end
@@ -57,6 +84,7 @@ end
 
 function scene:create( event )
 	local sceneGroup = self.view
+	sceneG=sceneGroup
 	-- CREATING OBJECTS
 
 	--get level
@@ -97,6 +125,8 @@ function scene:create( event )
 		print("Spawn")
 		player[i]=spawnPlayers()
 
+		--for every player add sequence
+
 	end
 
 
@@ -124,7 +154,7 @@ function scene:create( event )
 	scoreText= display.newText("Score : "..score,halfW-100,0,native.systemFont,25)
 	--display.newText("Score :  ",halfW-40,10,native.systemFont,26)
 
-	 duration= 10
+	 duration= 5
 	 timerText= display.newText("Time : "..duration,halfW+90,0,native.systemFont,25)
 
 
@@ -158,7 +188,7 @@ local function showGameOver()
         scoreText=score
     }
 }
-
+	--composer.removeScene("game")
 	composer.gotoScene( "level1", options )
 
 end
@@ -179,7 +209,7 @@ end
 
 --calling above function after every one sec
 
-timer.performWithDelay(1000,decreaseTimeByOneSec,duration)
+mytimer=timer.performWithDelay(1000,decreaseTimeByOneSec,duration)
 
 
 
@@ -198,6 +228,7 @@ function touchScreen( event )
 	if event.phase == "began" then
 	print(event.x)
 	print(event.y)
+	audio.play(kickSound,{channel=3})
 	transition.to(star, {time=500, x=event.x, y=event.y, tag="star"})
 	end
 end
@@ -206,10 +237,12 @@ end
 function onLocalPreCollision( self, event )
 if event.other.name == "goal" then
 	print("You scored a goal")
+
 	displayGoal.isVisible=true
 	displayGoal.text="Goal!"
 	score=score+1
 	scoreText.text="Score : "..score
+	audio.play(goalSound,{channel=3})
 
  	--timer.performWithDelay(1000,hideMyText)
   end
@@ -245,7 +278,7 @@ function movePlayer(player)
 		prevX=player[i].x
 		prevY=player[i].y
 		print(prevX.."yo")
-		transition.to(player[i],{time=1000,x=math.random(40,166),y=math.random(66,404),tag="player1"})
+		transition.to(player[i],{time=1000,x=math.random(0,display.contentWidth),y=math.random(66,404),tag="player1"})
 	end
 
 		--move one player
@@ -278,6 +311,9 @@ function onLocalPostCollision( self, event )
 	if(event.contact.isTouching) then
 	--stopping star transition so that it doesnt go in goal. 
 	transition.cancel("star")
+	if event.other.name == "player" then
+		audio.play(kickByCompSound,{channel=3})
+	end
 	pushStarToOriginalPosition()
 	print(event.selfElement)
 	end-- body
@@ -286,18 +322,51 @@ end
 
 
 
+--key handling function
+local function onKeyEvent( event )
+	local phase = event.phase
+	local composer= require "composer"
+	   local keyName = event.keyName
+	   print( event.phase, event.keyName )
+	   currScene= composer.getSceneName("current")
+	   print("Current : "..currScene)
+	 
+	   if ( ("back" == keyName and phase == "down") or ("back" == keyName and phase == "up") ) then
+	      
+	      -- if ( currScene == "menu" ) then
+	      --    native.requestExit()
+	      -- else
+		    -- composer.removeScene("game",true)
+		    --remove if exists
+			sceneName= composer.getScene("menu")
+
+			if sceneName~=nil then
+				print("Scene exists, removing it.")
+				composer.removeScene("menu",true)
+			end
+	         composer.gotoScene("menu",{ effect="crossFade", time=500 })
+		      --end
+		 
+	   return true
+   		end
+   return false	-- body
+end
+
+
+	--key listener
+	Runtime:addEventListener("key",onKeyEvent)
 
 
 
 
 movePlayer(player)
 
- Runtime:addEventListener("touch", touchScreen)
+ --Runtime:addEventListener("touch", touchScreen)
 
 star.preCollision = onLocalPreCollision
 star:addEventListener( "preCollision", star )
 
-Runtime:addEventListener("collision", onCollision)
+--Runtime:addEventListener("collision", onCollision)
 
 star.postCollision = onLocalPostCollision
 star:addEventListener( "postCollision", star )
@@ -311,11 +380,17 @@ function scene:show( event )
 	
 	if phase == "will" then
 		-- Called when the scene is still off screen and is about to move on screen
+			audio.resume(bgmusicChannel)
+			print("inshowgame")
+
+
 	elseif phase == "did" then
 		-- Called when the scene is now on screen
 		-- 
 		-- INSERT code here to make the scene come alive
 		-- e.g. start timers, begin animation, play audio, etc.
+		Runtime:addEventListener("touch", touchScreen)
+	 Runtime:addEventListener("collision", onCollision)
 		physics.start()
 	end	
 end
@@ -325,31 +400,40 @@ function scene:hide( event )
 	local phase = event.phase
 	
 	if event.phase == "will" then
+		Runtime:removeEventListener("touch", touchScreen)
+	 Runtime:removeEventListener("collision", onCollision)
 		-- Called when the scene is on screen and is about to move off screen
 		--
 		-- INSERT code here to pause the scene
 		-- e.g. stop timers, stop animation, unload sounds, etc.)
 	elseif phase == "did" then
 		-- Called when the scene is now off screen
+		timer.cancel(mytimer)
+
 		transition.cancel("player")
 		transition.cancel("player1")
 		transition.cancel("star")
 		if player ~=nil then
-		for i=1,#player do
-			player[i]:removeSelf()
-			player[i]=nil
-		end		
-	end
+			for i=1,#player do
+				player[i]:removeSelf()
+				player[i]=nil
+			end		
+		end
+		print("inhidegame")
+		audio.pause(bgmusicChannel)
 	end	
 end
 
 function scene:destroy( event )
 	local sceneGroup = self.view
+			--timer.cancel(mytimer)
+
 	
 	-- Called prior to the removal of scene's "view" (sceneGroup)
 	-- 
 	-- INSERT code here to cleanup the scene
 	-- e.g. remove display objects, remove touch listeners, save state, etc.
+
 	--composer.removeScene("level1",true)
 	
 	-- sceneGroup:removeSelf()
