@@ -6,6 +6,16 @@ local physics = require ("physics")
 physics.start()
 
 
+
+--ads 
+local coronaAds = require( "plugin.coronaAds" )
+
+
+local bannerPlacement = "banner-placement"
+local interstitialPlacement = "interstitial-1"
+
+
+
 -- For animation 
 local animation= require("checkanim")
 
@@ -15,24 +25,31 @@ local animation= require("checkanim")
 
 local sfxr=require("sfx")
 sfxr.init()
-audio.setVolume(0.3,2)
+sfxr.setGameAndOverVolume()
+
 local bgmusicChannel
 
 
---background music
-local function playBackgroundMusic(  )
-	-- body
-	local options=
-	{
-		channel=2,
-		loop=-1
+local mydata=require("mydata")
 
-	}
 
-	audio.setVolume(0.1,{channel=2})
-	bgmusicChannel=audio.play(sfxr.bgmusic,options)
 
-end
+-- --background music
+-- local function playBackgroundMusic(  )
+-- 	-- body
+-- 	local options=
+-- 	{
+-- 		channel=2,
+-- 		loop=-1
+
+-- 	}
+
+-- 	audio.setVolume(0.1,{channel=2})
+-- 	if mydata.isSoundOn==true then
+-- 		bgmusicChannel=audio.play(sfxr.bgmusic,options)
+-- 	end
+
+-- end
 
 
 
@@ -51,6 +68,8 @@ local  mytimer =1
 local paramsToBringBack
 local paramsToBringBackText 
 local sceneG
+
+local star
 
 local function getPlayerCount(level)
 	playercount=2
@@ -92,6 +111,9 @@ function scene:create( event )
 	local  level= params.level
 	paramsToBringBack=level
 
+	-- if mydata.isSoundOn == true then
+	-- 		audio.resume()
+	-- end
 
 	
 
@@ -105,7 +127,7 @@ function scene:create( event )
 	local bg = display.newImageRect("images/check.jpg",display.contentWidth*2,display.contentHeight*2.2)
 
 
-	local star = display.newImage("images/fball.png")
+	 star = display.newImage("images/fball.png")
 	star.x = 160
 	star.y = 500
 	star.name = "star"
@@ -154,7 +176,7 @@ function scene:create( event )
 	scoreText= display.newText("Score : "..score,halfW-100,0,native.systemFont,25)
 	--display.newText("Score :  ",halfW-40,10,native.systemFont,26)
 
-	 duration= 5
+	 duration= 30
 	 timerText= display.newText("Time : "..duration,halfW+90,0,native.systemFont,25)
 
 
@@ -202,7 +224,7 @@ local function decreaseTimeByOneSec()
 	duration=duration-1
 	timerText.text="Time : "..duration
 	if duration== 0 then
-		showGameOver()
+		timer.performWithDelay(1000,showGameOver())
 	end
 
 end
@@ -228,7 +250,9 @@ function touchScreen( event )
 	if event.phase == "began" then
 	print(event.x)
 	print(event.y)
-	audio.play(kickSound,{channel=3})
+	-- if mydata.isSoundOn==true then
+		sfxr.play(sfxr.kickSound,{channel=3})
+	--end
 	transition.to(star, {time=500, x=event.x, y=event.y, tag="star"})
 	end
 end
@@ -241,8 +265,13 @@ if event.other.name == "goal" then
 	displayGoal.isVisible=true
 	displayGoal.text="Goal!"
 	score=score+1
-	scoreText.text="Score : "..score
-	audio.play(goalSound,{channel=3})
+	if duration~=0 then
+		scoreText.text="Score : "..score
+		--if mydata.isSoundOn==true then
+		print("here lies goal")
+			sfxr.play(sfxr.goalSound,{channel=4})
+	end
+
 
  	--timer.performWithDelay(1000,hideMyText)
   end
@@ -278,14 +307,14 @@ function movePlayer(player)
 		prevX=player[i].x
 		prevY=player[i].y
 		print(prevX.."yo")
-		transition.to(player[i],{time=1000,x=math.random(0,display.contentWidth),y=math.random(66,404),tag="player1"})
+		transition.to(player[i],{time=1000,x=math.random(5,display.contentWidth-5),y=math.random(66,404),tag="player1"})
 	end
 
 		--move one player
 	transition.to( player[no_of_player],
 	{
 		time=1000,
-		x=math.random(40,166),
+		x=math.random(5,display.contentWidth-5),
 		y=math.random(66,404),
 		onComplete = function()
                 movePlayer(player)
@@ -312,7 +341,9 @@ function onLocalPostCollision( self, event )
 	--stopping star transition so that it doesnt go in goal. 
 	transition.cancel("star")
 	if event.other.name == "player" then
-		audio.play(kickByCompSound,{channel=3})
+		--if mydata.isSoundOn==true then
+			sfxr.play(sfxr.kickByCompSound,{channel=3})
+		--end
 	end
 	pushStarToOriginalPosition()
 	print(event.selfElement)
@@ -380,11 +411,22 @@ function scene:show( event )
 	
 	if phase == "will" then
 		-- Called when the scene is still off screen and is about to move on screen
-			audio.resume(bgmusicChannel)
-			print("inshowgame")
-
-
+			 -- if mydata.isSoundOn == false then
+				-- audio.pause()
+			 -- end
+			
+			 audio.resume(3)
+			audio.resume(4)
 	elseif phase == "did" then
+		-- if mydata.isSoundOn == false then
+		-- 		audio.pause()
+		-- end
+			print("inshowgame")
+			-- if mydata.isSoundOn == true then
+			-- 	audio.resume()
+			-- end
+
+
 		-- Called when the scene is now on screen
 		-- 
 		-- INSERT code here to make the scene come alive
@@ -400,14 +442,24 @@ function scene:hide( event )
 	local phase = event.phase
 	
 	if event.phase == "will" then
-		Runtime:removeEventListener("touch", touchScreen)
-	 Runtime:removeEventListener("collision", onCollision)
+		
 		-- Called when the scene is on screen and is about to move off screen
 		--
 		-- INSERT code here to pause the scene
 		-- e.g. stop timers, stop animation, unload sounds, etc.)
+		
+
+
 	elseif phase == "did" then
 		-- Called when the scene is now off screen
+		audio.pause(3)
+		audio.pause(4)
+		Runtime:removeEventListener("touch", touchScreen)
+	 Runtime:removeEventListener("collision", onCollision)
+	star:removeEventListener( "preCollision", star )
+    star:removeEventListener( "postCollision", star )
+
+
 		timer.cancel(mytimer)
 
 		transition.cancel("player")
@@ -420,7 +472,19 @@ function scene:hide( event )
 			end		
 		end
 		print("inhidegame")
-		audio.pause(bgmusicChannel)
+		-- if mydata.isSoundOn==true then
+		-- 	audio.pause()
+		-- end
+		
+		--Ads
+		-- if(bannerPlacement~=nil) and (interstitialPlacement~=nil) then
+		-- 	coronaAds.show(bannerPlacement)
+		-- 	coronaAds.show(interstitialPlacement)
+		-- end
+
+		coronaAds.show(bannerPlacement,false)
+        coronaAds.show(interstitialPlacement,true)
+
 	end	
 end
 

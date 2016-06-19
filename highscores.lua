@@ -40,7 +40,11 @@ local function readFromFile(filename )
 	end
 
 	file = nil
-	return contents
+    if contents~=nil then
+	   return contents
+    else
+        return 0
+    end;
 
 end
 
@@ -70,9 +74,9 @@ function scene:create( event )
 
     txt_head= display.newText( "Highscores", 160, 80, "Arial", 55 )
     -- Code here runs when the scene is first created but has not yet appeared on screen
-    txt_easy= display.newText( "Easy : "..easyScore, 160, 180, "Arial", 25 )
-    txt_medium= display.newText( "Medium : "..mediumScore, 160, 220, "Arial", 25 )
-    txt_difficult= display.newText( "Difficult : "..difficultScore, 160, 260, "Arial", 25 )
+    txt_easy= display.newText( "Easy : "..easyScore.." goals", 160, 180, "Arial", 25 )
+    txt_medium= display.newText( "Medium : "..mediumScore.." goals", 160, 220, "Arial", 25 )
+    txt_difficult= display.newText( "Difficult : "..difficultScore.." goals", 160, 260, "Arial", 25 )
 
     --back button
 	local BackButton = widget.newButton{
@@ -98,6 +102,35 @@ function scene:create( event )
     sceneGroup:insert(txt_medium)
     sceneGroup:insert(txt_difficult)
     sceneGroup:insert(BackButton)
+
+    --key handling function
+    local function onKeyEvent( event )
+        local phase = event.phase
+           local keyName = event.keyName
+           print( event.phase, event.keyName )
+           currScene= composer.getSceneName("current")
+           print("Current : "..currScene)
+         
+           if ( ("back" == keyName and phase == "down") or ("back" == keyName and phase == "up") ) then
+              
+              -- if ( currScene == "menu" ) then
+              --    native.requestExit()
+              -- else
+                  if ( currScene == "menu" ) then
+                    print("going to level1")
+                    composer.hideOverlay( "fade", 400 )                  --end
+              end
+           return true
+            end
+       return false -- body
+    end
+
+
+    --key listener
+    Runtime:addEventListener("key",onKeyEvent)
+
+
+
 end
 
 -- show()

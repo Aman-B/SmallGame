@@ -7,6 +7,12 @@
 local composer = require( "composer" )
 local scene = composer.newScene()
 
+
+
+--local ads= require("admodule")
+local coronaAds = require( "plugin.coronaAds" )
+
+
 -- -- include Corona's "physics" library
 -- local physics = require "physics"
 -- physics.start(); physics.pause()
@@ -25,6 +31,8 @@ local txt_gameover,txt_highscore
 local txt_score
 local score_recv
 
+ local bannerPlacement = "banner-placement"
+local interstitialPlacement = "interstitial-1"
 
 -- for share module
 local myClass = require("share");
@@ -32,21 +40,24 @@ local myClass = require("share");
 --load sound effect 
 local sfxr=require("sfx")
 sfxr.init()
+sfxr.setGameAndOverVolume()
 local bgmusicChannel
 
+
+local mydata=require("mydata")
 
 --background music
 local function playBackgroundMusic(  )
 	-- body
 	local options=
 	{
-		channel=2,
+		channel=1,
 		loop=-1
 
 	}
-
-	bgmusicChannel=audio.play(sfxr.bgmusic,options)
-
+	if mydata.isSoundOn == true then
+		bgmusicChannel=sfxr.play(sfxr.bgmusic,options)
+	end 
 end
 --handle back and volume keys
 
@@ -125,12 +136,17 @@ local function compareWithHighsScore(score_recv)
 		if score_recv>savedscore then
 			print("Inside compare1")
 			writeToFile(score_recv)
-			audio.play(sfxr.highscoreSound,{channel=3})
-			txt_highscore.text="New Highscore : "..score_recv.."!!"
+			sfxr.play(sfxr.highscoreSound,{channel=3})
+			txt_highscore.text="New Highscore : "..score_recv.." !"
 			txt_highscore.isVisible=true
 		end
 	
     else
+  --   	if (score_recv~=0) then
+  --   		sfxr.play(sfxr.highscoreSound,{channel=3})
+  --   		txt_highscore.text="New Highscore : "..score_recv.."!!"
+		-- 	txt_highscore.isVisible=true
+		-- end
     	writeToFile(score_recv)
     end
 
@@ -143,36 +159,23 @@ end
 --share button
 local function onShareBtnReleased (event)
 	--To play the sound effect
-	audio.play(sfxr.buttonSound,{channel=3})
+		sfxr.play(sfxr.buttonSound,{channel=3})
 	myClass.onShareButtonReleased(event)
 end
 
 
---highscore button
-local function onHighScoreBtnReleased (event)
-	--To play the sound effect
-	audio.play(sfxr.buttonSound,{channel=3})
-	-- Options table for the overlay scene "pause.lua"
-	local options = {
-	    isModal = true,
-	    effect = "fade",
-	    time = 400,
-	    params = {
-	        sampleVar = "my sample variable"
-	    }
-	}
 
-	-- By some method (a pause button, for example), show the overlay
-	composer.showOverlay( "highscores", options )
-end
 
 
 --home button
 local function showHome(event)
 	--To play the sound effect
-	audio.play(sfxr.buttonSound,{channel=3})
+		sfxr.play(sfxr.buttonSound,{channel=3})
+	
 	composer.removeScene("game")
 	composer.removeScene("level1")
+	--remove banner ads
+	coronaAds.hide(bannerPlacement)
 	composer.gotoScene("menu")
 	end
 
@@ -181,7 +184,9 @@ local function showHome(event)
 --replay button handler
 local function onPlayBtnRelease(event)
 	--To play the sound effect
-	audio.play(sfxr.buttonSound,{channel=3})
+	
+		sfxr.play(sfxr.buttonSound,{channel=3})
+
 	composer.removeScene("game",true)
 	
 	local options = 
@@ -194,6 +199,8 @@ local function onPlayBtnRelease(event)
      		
     	}
 	}
+	--remove banner ads
+	coronaAds.hide(bannerPlacement)
 	composer.removeScene("game")
 	composer.gotoScene( "game",options)
 	
@@ -219,7 +226,10 @@ function scene:create( event )
 	local params = event.params
 	print("level"..params.paramsToBringBackText)
 	paramsToBringBack=params.paramsToBringBackText
-	playBackgroundMusic()
+	-- if mydata.isSoundOn == true then
+	-- 	playBackgroundMusic()
+	-- end
+	
 	-- Called when the scene's view does not exist.
 	-- 
 	-- INSERT code here to initialize the scene
@@ -235,10 +245,10 @@ function scene:create( event )
 	bg.x, bg.y = 0, 0	
 
 	txt_gameover= display.newText( "Game over!", 160, 150, "Arial", 60 )
-	txt_highscore= display.newText( "HighScore : ", 160, 260, "Arial", 30 )
+	txt_highscore= display.newText( "HighScore : ", 160, 280, "Arial", 30 )
 
 
-	txt_score= display.newText( "Score : "..score_recv, 160, 200, "Arial", 40 )
+	txt_score= display.newText( "Score : "..score_recv, 160, 220, "Arial", 40 )
 
 
 	local ReplayBtn = widget.newButton {
@@ -256,7 +266,7 @@ function scene:create( event )
 	scoreToSend=score_recv
 
 	ReplayBtn.x = display.contentWidth*0.3
-	ReplayBtn.y = display.contentHeight - 140
+	ReplayBtn.y = display.contentHeight - 100
 
 	--share button
 	local shareButton = widget.newButton{
@@ -271,7 +281,7 @@ function scene:create( event )
 	    onRelease = onShareBtnReleased -- event listener function
 	}
 	shareButton.x = display.contentWidth*0.5
-	shareButton.y = display.contentHeight -140
+	shareButton.y = display.contentHeight -100
 
 
 
@@ -295,28 +305,14 @@ function scene:create( event )
 	
 
 	HomeBtn.x = display.contentWidth*0.7
-	HomeBtn.y = display.contentHeight - 140
+	HomeBtn.y = display.contentHeight - 100
 
 	
 
 	
 
 
---highscores button
-	local HighScoreButton = widget.newButton{
 
-		fontSize="20",
-		font="Bold",
-		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 }  },
-		defaultFile="images/buttonoverlay.png",
-		overFile="images/buttonoverlay.png",
-		width=154, height=50,	
-	    id = "highscores",    
-	    label = "Highscores",
-	    onRelease = onHighScoreBtnReleased -- event listener function
-	}
-	HighScoreButton.x = display.contentWidth*0.5
-	HighScoreButton.y = display.contentHeight -55
 
 	
 
@@ -327,7 +323,7 @@ function scene:create( event )
 	sceneGroup:insert(HomeBtn)
 	sceneGroup:insert( ReplayBtn)
 	sceneGroup:insert(shareButton)
-	sceneGroup:insert(HighScoreButton)
+	
 	sceneGroup:insert(txt_highscore)
 
 
@@ -347,6 +343,8 @@ function scene:create( event )
 		      -- else
 			      if ( currScene == "level1" ) then
 			      	print("going to menua")
+			      	--remove banner ads
+					coronaAds.hide(bannerPlacement)
 		         composer.gotoScene("menu",{ effect="crossFade", time=500 })
 			      --end
 			  end
@@ -358,14 +356,19 @@ function scene:create( event )
 
 	--key listener
 	Runtime:addEventListener("key",onKeyEvent)
-	
+
+
+	-- if(bannerPlacement~=nil) and (interstitialPlacement~=nil) then
+	-- 	coronaAds.show(bannerPlacement)
+	-- 	coronaAds.show(interstitialPlacement)
+	-- end
 
 
 
 end
 
 
-function scene:show( event )
+function scene:show( event ) 
 	local sceneGroup = self.view
 	--get params
 	local params = event.params
@@ -373,13 +376,34 @@ function scene:show( event )
 	
 	if phase == "will" then
 		-- Called when the scene is still off screen and is about to move on screen
+		-- if mydata.isSoundOn == false then
+		-- 		audio.pause()
+		-- 	end
+             -- Show an ad
+            --  print("Showing ads")
+            -- coronaAds.show(bannerPlacement,false)
+            -- coronaAds.show(interstitialPlacement,true)
+            --Ads
+			 -- Substitute your own placement IDs when generated
+		   
+		     local show = math.random(1,10)
+
+		    
+
+		         
+        
 	elseif phase == "did" then
 		-- Called when the scene is now on screen
 		-- 
 		-- INSERT code here to make the scene come alive
 		-- e.g. start timers, begin animation, play audio, etc.	
-		audio.resume(bgmusicChannel)
+		-- if mydata.isSoundOn == true then
+		-- 	audio.resume(bgmusicChannel)
+		-- end
 
+
+    
+    
 
 	    txt_gameover.isVisible = false
 		txt_score.text="Score : "..params.scoreText
@@ -404,10 +428,19 @@ function scene:hide( event )
 		--
 		-- INSERT code here to pause the scene
 		-- e.g. stop timers, stop animation, unload sounds, etc.)
-		audio.pause(bgmusicChannel)
+		-- if mydata.isSoundOn == true then
+		-- 	audio.pause(1)
+		-- end
+		coronaAds.hide(bannerPlacement)
+		coronaAds.hide(interstitialPlacement)
+		
 
 	elseif phase == "did" then
 		-- Called when the scene is now off screen
+
+		
+
+
 		physics.pause()
 		hideMyText()
 	end	

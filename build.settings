@@ -53,6 +53,13 @@ settings =
 				"Icon-Small-50.png",
 				"Icon-Small-50@2x.png",
 			},
+			 NSAppTransportSecurity = { NSAllowsArbitraryLoads=true },
+                NSLocationAlwaysUsageDescription = { "" },
+                NSLocationWhenInUseUsageDescription = { "" },
+
+
+
+
 
 			--[[
 			-- iOS app URL schemes:
@@ -89,5 +96,15 @@ settings =
 			-- required
 			publisherId = "com.coronalabs",
 		},
+		["plugin.coronaAds"] =
+            {
+                publisherId = "com.coronalabs",
+                supportedPlatforms = { iphone=true, android=true }
+            },
+        ["plugin.google.play.services"] =
+            {
+                publisherId = "com.coronalabs",
+                supportedPlatforms = { android=true}
+            },
 	},
 }

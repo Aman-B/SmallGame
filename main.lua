@@ -3,6 +3,28 @@
 -- main.lua
 --
 -----------------------------------------------------------------------------------------
+--ads
+local coronaAds = require( "plugin.coronaAds" )
+
+-- Substitute your own placement IDs when generated
+local bannerPlacement = "banner-placement"
+local interstitialPlacement = "interstitial-1"
+
+-- Corona Ads listener function
+local function adListener( event )
+
+    -- Successful initialization of Corona Ads
+    if ( event.phase == "init" ) then
+        -- Show an ad
+        coronaAds.show( bannerPlacement, false )
+        --coronaAds.show( interstitialPlacement, true )
+    end
+end
+
+-- Initialize Corona Ads (substitute your own API key when generated)
+coronaAds.init( "aca893a4-d847-4460-8d14-873767619d2e", adListener )
+
+
 
 local physics = require("physics")
 physics.start()
@@ -20,6 +42,9 @@ local bkg = display.newImageRect("backg.jpg")
 -- bkg.anchorY=0
 
 
+
+
+
 -- hide the status bar
 
 display.setStatusBar( display.HiddenStatusBar )
@@ -32,7 +57,7 @@ composer.gotoScene( "menu" )
 
 
 
---ignore, it was a test for sprite animation
+--ignore, this (below) was a test for sprite animation
 
 -- display.setStatusBar(display.HiddenStatusBar)
  

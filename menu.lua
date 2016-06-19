@@ -14,6 +14,12 @@ local widget = require "widget"
 
 local keyClass = require("keyhandler")
 
+
+--ads
+local coronaAds = require( "plugin.coronaAds" )
+local bannerPlacement = "banner-placement"
+local interstitialPlacement = "interstitial-1"
+
 --------------------------------------------
 -- forward declarations and other locals
 local playBtn,mediumBtn,difficultBtn,txt_gamename,soundBtn
@@ -23,7 +29,10 @@ local playBtn,mediumBtn,difficultBtn,txt_gamename,soundBtn
 local sfxr=require("sfx")
 sfxr.init()
 local bgmusicChannel
+--mute btn (just image)
+local muteimage,soundimage
 
+local mydata=require("mydata")
 
 --background music
 local function playBackgroundMusic(  )
@@ -31,13 +40,13 @@ local function playBackgroundMusic(  )
 	local options=
 	{
 		channel=1,
-		loop=-1
+		loop=1
 
 	}
 
-	audio.setVolume(0.2,{channel=1})
-	bgmusicChannel=audio.play(sfxr.bgmusic,options)
-
+	audio.setVolume(0.1,{channel=1})
+	bgmusicChannel=sfxr.play(sfxr.bgmusic,options)
+	
 end
 
 
@@ -46,7 +55,9 @@ local function onPlayBtnRelease(event)
 	
 	-- go to level1.lua scene
 	--To play the sound effect
-	audio.play(sfxr.buttonSound,{channel=3})
+	if mydata.isSoundOn==true then
+		audio.play(sfxr.buttonSound,{channel=2})
+	end
 
 	--decide level
 	print(event.target:getLabel())
@@ -78,21 +89,33 @@ local function onPlayBtnRelease(event)
 		params={ level=leveltxt
 		}
 	}
+	coronaAds.hide(bannerPlacement)
 	composer.gotoScene( "game", options )
 	
 	return true	-- indicates successful touch
 end
 
-local function onsoundBtnRelease()
-	-- body
-	if sfxr.isSoundOn==false then
-		audio.setVolume(0.2)
-	else
-		audio.setVolume(0)
-	end
+--highscore button
+local function onHighScoreBtnReleased (event)
+	--To play the sound effect
+	sfxr.play(sfxr.buttonSound,{channel=3})
+	-- Options table for the overlay scene "pause.lua"
+	local options = {
+	    isModal = true,
+	    effect = "fade",
+	    time = 400,
+	    params = {
+	        sampleVar = "my sample variable"
+	    }
+	}
 
-
+	-- By some method (a pause button, for example), show the overlay
+	composer.showOverlay( "highscores", options )
 end
+
+
+
+
 
 
 function scene:create( event )
@@ -106,9 +129,13 @@ function scene:create( event )
 	-- 
 	-- INSERT code here to initialize the scene
 	-- e.g. add display objects to 'sceneGroup', add touch listeners, etc.
+	if mydata.isSoundOn==nil then
+		mydata.isSoundOn=true
+	end
 
-	
-	playBackgroundMusic()
+	-- if mydata.isSoundOn==true then
+	-- 	playBackgroundMusic()
+	-- end
 
 	-- display a background image
 	local background = display.newImageRect( "images/check.jpg", display.contentWidth, display.contentHeight )
@@ -166,21 +193,31 @@ function scene:create( event )
 	difficultBtn.y = display.contentHeight - 80
 
 
-	txt_gamename= display.newText( "8-bit Soccer", 160, 220, "Arial", 55 )
 
-	--difficult level
-	soundBtn = widget.newButton{
+
+	--highscores button
+	local HighScoreButton = widget.newButton{
+
 		fontSize="20",
 		font="Bold",
 		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 }  },
-		defaultFile="images/volumeOn.png",
-		overFile="images/mute.png",
-		width=154, height=50,
-		onRelease = onsoundBtnRelease	-- event listener function
+		defaultFile="images/buttonoverlay.png",
+		overFile="images/buttonoverlay.png",
+		width=154, height=50,	
+	    id = "highscores",    
+	    label = "Highscores",
+	    onRelease = onHighScoreBtnReleased -- event listener function
 	}
-	soundBtn.x = display.contentWidth*0.5
-	soundBtn.y = display.contentHeight - 40
+	HighScoreButton.x = display.contentWidth*0.5
+	HighScoreButton.y = display.contentHeight -30
 
+	
+
+
+
+	txt_gamename= display.newText( "8-bit Soccer", 160, 220, "Arial", 55 )
+
+	
 
 	-- all display objects must be inserted into group
 	sceneGroup:insert( background )
@@ -188,8 +225,9 @@ function scene:create( event )
 	sceneGroup:insert( playBtn )
 	sceneGroup:insert( mediumBtn )
 	sceneGroup:insert (difficultBtn)
-	sceneGroup:insert(soundBtn)
+	sceneGroup:insert(HighScoreButton)
 
+	
 	-- --key handling function
 	-- local function onKeyEvent( event )
 	-- 	local phase = event.phase
@@ -219,8 +257,11 @@ function scene:show( event )
 	
 	if phase == "will" then
 				print("inshow")
-				audio.resume(bgmusicChannel)
+				-- if mydata.isSoundOn==true then
+				-- 	audio.resume(bgmusicChannel)
+				-- end
 
+				coronaAds.hide(interstitialPlacement)
 		-- Called when the scene is still off screen and is about to move on screen
 	elseif phase == "did" then
 
@@ -228,7 +269,9 @@ function scene:show( event )
 		-- 
 		-- INSERT code here to make the scene come alive
 		-- e.g. start timers, begin animation, play audio, etc.
-		playBackgroundMusic()
+		-- if mydata.isSoundOn==true then
+		-- 	playBackgroundMusic()
+		-- end
 	end	
 end
 
@@ -241,8 +284,11 @@ function scene:hide( event )
 		--
 		-- INSERT code here to pause the scene
 		-- e.g. stop timers, stop animation, unload sounds, etc.)
-			print("inhide")
-			audio.pause(bgmusicChannel)
+			
+			-- if mydata.isSoundOn==true then
+			-- 	print("inhide")
+			-- 	audio.pause(bgmusicChannel)
+			-- end
 
 	elseif phase == "did" then
 		-- Called when the scene is now off screen

@@ -39,12 +39,12 @@ publicClass.onShareButtonReleased= function ( event )
         native.showPopup( "social",
         {
             service = serviceName, -- The service key is ignored on Android.
-            message = "I scored"..scoreToSend.." goals in this awesome game. Check it out here!",
+            message = "I scored "..scoreToSend.." goals in this awesome game. Check it out here!",
             listener = listener,
            
             url = 
             { 
-                "http://www.coronalabs.com",
+                "https://play.google.com/store/apps/details?id=com.bewtechnologies.eightbitsoccer",
             }
         })
     else
