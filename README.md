@@ -1,4 +1,7 @@
-# SmallGame
+# 8-Bit Soccer
+
+(Project name - SmallGame)
+
 A small soccer game created using corona sdk. 
 
 The users have to tap on the screen to move the ball.
