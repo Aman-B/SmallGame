@@ -8,7 +8,7 @@ The aim being to dodge the ball from players and score a goal, eventually.
 It is available on google play store. Check it out :
 
 
-[Read more words!](https://play.google.com/store/apps/details?id=com.bewtechnologies.eightbitsoccer)![alt tag](https://developer.android.com/images/brand/en_app_rgb_wo_60.png)
+[![alt tag](https://developer.android.com/images/brand/en_app_rgb_wo_60.png)](https://play.google.com/store/apps/details?id=com.bewtechnologies.eightbitsoccer)
 
 
 
